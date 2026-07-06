@@ -8,6 +8,7 @@ import yensao from "@/assets/product-yensao.jpg";
 import tra from "@/assets/product-tra.jpg";
 import sam from "@/assets/product-sam.jpg";
 import { useCart } from "@/hooks/useCart";
+import { EditableImage } from "./EditableMedia";
 
 type Product = { id: string; img: string; name: string; tag: string; price: string };
 
