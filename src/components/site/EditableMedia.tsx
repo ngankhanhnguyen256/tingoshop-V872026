@@ -8,8 +8,9 @@ import {
 import { Upload } from "lucide-react";
 
 /**
- * Nút "Import Media" hiển thị ở góc phải mỗi vùng media (chỉ trong Preview/DEV).
- * Khi click sẽ mở hộp thoại chọn tệp thủ công từ máy tính.
+ * Nút "Import Media" hiển thị ở góc phải mỗi vùng media.
+ * Luôn hiển thị (không ẩn theo môi trường) để đảm bảo có thể thao tác
+ * trong Preview / Production nội bộ.
  */
 function ImportButton({
   accept,
@@ -22,8 +23,6 @@ function ImportButton({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  if (!import.meta.env.DEV) return null;
-
   return (
     <>
       <button
@@ -33,7 +32,7 @@ function ImportButton({
           e.stopPropagation();
           inputRef.current?.click();
         }}
-        className="pointer-events-auto absolute right-2 top-2 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-foreground shadow-md ring-1 ring-black/5 backdrop-blur transition hover:bg-white"
+        className="absolute top-2 right-2 z-50 bg-blue-600 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg opacity-100 block pointer-events-auto inline-flex items-center gap-1 hover:bg-blue-700"
         aria-label={label}
       >
         <Upload className="h-3 w-3" />
@@ -54,17 +53,20 @@ function ImportButton({
   );
 }
 
+/* Base wrapper class: relative group + hover border xanh xác nhận Editable */
+const EDITABLE_WRAPPER =
+  "relative group h-full w-full border-2 border-transparent hover:border-blue-500 transition-colors";
+
 /* ------------------------------- Editable Image ------------------------------ */
 
 type EditableImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string;
-  /** class cho div bao ngoài; mặc định fill parent để giữ nguyên aspect / bo góc */
   wrapperClassName?: string;
 };
 
 export function EditableImage({
   src,
-  wrapperClassName = "relative h-full w-full",
+  wrapperClassName,
   className,
   ...rest
 }: EditableImageProps) {
@@ -72,7 +74,7 @@ export function EditableImage({
   useEffect(() => setCurrent(src), [src]);
 
   return (
-    <div className={wrapperClassName}>
+    <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
       <img {...rest} src={current} className={className} />
       <ImportButton accept="image/*" onFile={(u) => setCurrent(u)} />
     </div>
@@ -90,7 +92,7 @@ type EditableVideoProps = Omit<VideoHTMLAttributes<HTMLVideoElement>, "src" | "p
 export function EditableVideo({
   src,
   poster,
-  wrapperClassName = "relative h-full w-full",
+  wrapperClassName,
   className,
   ...rest
 }: EditableVideoProps) {
@@ -100,7 +102,7 @@ export function EditableVideo({
   useEffect(() => setCurPoster(poster), [poster]);
 
   return (
-    <div className={wrapperClassName}>
+    <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
       <video
         {...rest}
         src={curSrc || undefined}
@@ -119,13 +121,6 @@ export function EditableVideo({
 }
 
 /* --------------------------- Editable Media Slot --------------------------- */
-/**
- * Dành cho khối vừa có thể là iframe YouTube, vừa có thể là <video> file:
- * - Nếu videoUrl là YouTube  → render iframe.
- * - Nếu là file .mp4/blob    → render <video>.
- * - Nếu chưa có video        → render <img> poster.
- * Khi Import file video sẽ tự chuyển sang <video>; import ảnh sẽ đổi poster.
- */
 
 function isYouTube(url?: string) {
   return !!url && /youtube\.com|youtu\.be/.test(url);
@@ -140,7 +135,7 @@ export function EditableMediaSlot({
   posterUrl,
   title,
   className,
-  wrapperClassName = "relative h-full w-full",
+  wrapperClassName,
   videoProps,
   imgProps,
 }: {
@@ -158,7 +153,7 @@ export function EditableMediaSlot({
   useEffect(() => setCurPoster(posterUrl), [posterUrl]);
 
   return (
-    <div className={wrapperClassName}>
+    <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
       {curVideo && isYouTube(curVideo) ? (
         <iframe
           src={toYouTubeEmbed(curVideo)}
@@ -186,10 +181,7 @@ export function EditableMediaSlot({
         accept="video/*,image/*"
         onFile={(u, file) => {
           if (file.type.startsWith("video")) setCurVideo(u);
-          else {
-            setCurPoster(u);
-            // Nếu chưa có video, poster mới cũng đóng vai trò ảnh chính
-          }
+          else setCurPoster(u);
         }}
       />
     </div>
