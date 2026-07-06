@@ -28,6 +28,7 @@ function ImportButton({
   label?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  if (!isEditMode()) return null;
 
   return (
     <>
