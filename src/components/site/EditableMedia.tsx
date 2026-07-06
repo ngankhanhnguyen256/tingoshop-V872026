@@ -5,7 +5,8 @@ import {
   type ImgHTMLAttributes,
   type VideoHTMLAttributes,
 } from "react";
-import { Upload } from "lucide-react";
+import { Upload, Loader2, Cloud } from "lucide-react";
+import { useMediaConfig } from "@/hooks/useMediaConfig";
 
 /**
  * Nút "Import Media" CHỈ hiển thị trong môi trường phát triển
@@ -16,26 +17,27 @@ export function isEditMode(): boolean {
   if (typeof window === "undefined") return false;
   const host = window.location.hostname;
   const search = window.location.search;
-  // Cho phép bật thủ công bằng ?edit=true trên mọi domain
   if (search.includes("edit=true")) return true;
-  // Localhost dev
   if (host === "localhost" || host === "127.0.0.1") return true;
   if (import.meta.env.DEV) return true;
-  // CHỈ hiện trên preview của Lovable (id-preview--*.lovable.app hoặc *-dev.lovable.app),
-  // KHÔNG hiện trên domain published (vd: tingoshop.lovable.app) hay Vercel / tên miền khách.
   if (host.startsWith("id-preview--")) return true;
   if (host.endsWith("-dev.lovable.app")) return true;
   if (host.endsWith(".lovable.dev")) return true;
   return false;
 }
+
 function ImportButton({
   accept,
   onFile,
   label = "Import Media",
+  busy = false,
+  persistent = false,
 }: {
   accept: string;
   onFile: (url: string, file: File) => void;
   label?: string;
+  busy?: boolean;
+  persistent?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [show, setShow] = useState(false);
@@ -46,15 +48,17 @@ function ImportButton({
     <>
       <button
         type="button"
+        disabled={busy}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           inputRef.current?.click();
         }}
-        className="absolute top-2 right-2 z-50 bg-blue-600 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg opacity-100 block pointer-events-auto inline-flex items-center gap-1 hover:bg-blue-700"
+        className={`absolute top-2 right-2 z-50 ${persistent ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"} text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg opacity-100 block pointer-events-auto inline-flex items-center gap-1 disabled:opacity-70`}
         aria-label={label}
+        title={persistent ? "Lưu vĩnh viễn vào Cloud (đã đăng nhập admin)" : "Chỉ hiển thị tạm — đăng nhập /admin để lưu vĩnh viễn"}
       >
-        <Upload className="h-3 w-3" />
+        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : persistent ? <Cloud className="h-3 w-3" /> : <Upload className="h-3 w-3" />}
         {label}
       </button>
       <input
@@ -72,7 +76,6 @@ function ImportButton({
   );
 }
 
-/* Base wrapper class: relative group + hover border xanh xác nhận Editable */
 const EDITABLE_WRAPPER =
   "relative group h-full w-full border-2 border-transparent hover:border-blue-500 transition-colors";
 
@@ -80,24 +83,51 @@ const EDITABLE_WRAPPER =
 
 type EditableImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string;
+  mediaKey?: string;
   wrapperClassName?: string;
   buttonLabel?: string;
 };
 
 export function EditableImage({
   src,
+  mediaKey,
   wrapperClassName,
   className,
   buttonLabel,
   ...rest
 }: EditableImageProps) {
-  const [current, setCurrent] = useState<string>(src);
-  useEffect(() => setCurrent(src), [src]);
+  const { resolve, save, isAdmin } = useMediaConfig();
+  const [override, setOverride] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setOverride(null), [src, mediaKey]);
+
+  const current = override ?? resolve(mediaKey, src);
+
+  const handleFile = async (blobUrl: string, file: File) => {
+    setOverride(blobUrl);
+    if (mediaKey && isAdmin) {
+      setBusy(true);
+      try {
+        const res = await save(mediaKey, file);
+        if (res) setOverride(null); // dùng URL vĩnh viễn từ provider
+      } catch (e) {
+        console.error("[EditableImage] save failed", e);
+      } finally {
+        setBusy(false);
+      }
+    }
+  };
 
   return (
     <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
       <img {...rest} src={current} className={className} />
-      <ImportButton accept="image/*" onFile={(u) => setCurrent(u)} label={buttonLabel} />
+      <ImportButton
+        accept="image/*"
+        onFile={handleFile}
+        label={buttonLabel}
+        busy={busy}
+        persistent={!!mediaKey && isAdmin}
+      />
     </div>
   );
 }
@@ -107,35 +137,51 @@ export function EditableImage({
 type EditableVideoProps = Omit<VideoHTMLAttributes<HTMLVideoElement>, "src" | "poster"> & {
   src?: string;
   poster?: string;
+  mediaKey?: string;
   wrapperClassName?: string;
 };
 
 export function EditableVideo({
   src,
   poster,
+  mediaKey,
   wrapperClassName,
   className,
   ...rest
 }: EditableVideoProps) {
-  const [curSrc, setCurSrc] = useState<string | undefined>(src);
-  const [curPoster, setCurPoster] = useState<string | undefined>(poster);
-  useEffect(() => setCurSrc(src), [src]);
-  useEffect(() => setCurPoster(poster), [poster]);
+  const { resolve, save, isAdmin } = useMediaConfig();
+  const [override, setOverride] = useState<{ src?: string; poster?: string }>({});
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setOverride({}), [src, poster, mediaKey]);
+
+  const curSrc = override.src ?? (mediaKey ? resolve(mediaKey, src ?? "") : src);
+  const curPoster = override.poster ?? poster;
+
+  const handleFile = async (blobUrl: string, file: File) => {
+    if (file.type.startsWith("video")) setOverride((p) => ({ ...p, src: blobUrl }));
+    else setOverride((p) => ({ ...p, poster: blobUrl }));
+
+    if (mediaKey && isAdmin) {
+      setBusy(true);
+      try {
+        await save(mediaKey, file);
+        setOverride({});
+      } catch (e) {
+        console.error("[EditableVideo] save failed", e);
+      } finally {
+        setBusy(false);
+      }
+    }
+  };
 
   return (
     <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
-      <video
-        {...rest}
-        src={curSrc || undefined}
-        poster={curPoster || undefined}
-        className={className}
-      />
+      <video {...rest} src={curSrc || undefined} poster={curPoster || undefined} className={className} />
       <ImportButton
         accept="video/*,image/*"
-        onFile={(u, file) => {
-          if (file.type.startsWith("video")) setCurSrc(u);
-          else setCurPoster(u);
-        }}
+        onFile={handleFile}
+        busy={busy}
+        persistent={!!mediaKey && isAdmin}
       />
     </div>
   );
@@ -160,6 +206,7 @@ export function EditableMediaSlot({
   videoProps,
   imgProps,
   buttonLabel,
+  mediaKey,
 }: {
   videoUrl?: string;
   posterUrl?: string;
@@ -169,11 +216,39 @@ export function EditableMediaSlot({
   videoProps?: VideoHTMLAttributes<HTMLVideoElement>;
   imgProps?: ImgHTMLAttributes<HTMLImageElement>;
   buttonLabel?: string;
+  mediaKey?: string;
 }) {
-  const [curVideo, setCurVideo] = useState<string | undefined>(videoUrl);
-  const [curPoster, setCurPoster] = useState<string | undefined>(posterUrl);
-  useEffect(() => setCurVideo(videoUrl), [videoUrl]);
-  useEffect(() => setCurPoster(posterUrl), [posterUrl]);
+  const { resolve, resolveType, save, isAdmin } = useMediaConfig();
+  const [override, setOverride] = useState<{ video?: string; poster?: string }>({});
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setOverride({}), [videoUrl, posterUrl, mediaKey]);
+
+  const storedType = resolveType(mediaKey, videoUrl ? "video" : "image");
+  const storedUrl = mediaKey ? resolve(mediaKey, "") : "";
+
+  const curVideo =
+    override.video ??
+    (storedType === "video" && storedUrl ? storedUrl : videoUrl);
+  const curPoster =
+    override.poster ??
+    (storedType === "image" && storedUrl ? storedUrl : posterUrl);
+
+  const handleFile = async (blobUrl: string, file: File) => {
+    if (file.type.startsWith("video")) setOverride((p) => ({ ...p, video: blobUrl }));
+    else setOverride((p) => ({ ...p, poster: blobUrl }));
+
+    if (mediaKey && isAdmin) {
+      setBusy(true);
+      try {
+        await save(mediaKey, file);
+        setOverride({});
+      } catch (e) {
+        console.error("[EditableMediaSlot] save failed", e);
+      } finally {
+        setBusy(false);
+      }
+    }
+  };
 
   return (
     <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
@@ -186,27 +261,16 @@ export function EditableMediaSlot({
           allowFullScreen
         />
       ) : curVideo ? (
-        <video
-          {...videoProps}
-          src={curVideo}
-          poster={curPoster || undefined}
-          className={className}
-        />
+        <video {...videoProps} src={curVideo} poster={curPoster || undefined} className={className} />
       ) : (
-        <img
-          {...imgProps}
-          src={curPoster}
-          alt={imgProps?.alt ?? title ?? ""}
-          className={className}
-        />
+        <img {...imgProps} src={curPoster} alt={imgProps?.alt ?? title ?? ""} className={className} />
       )}
       <ImportButton
         accept="video/*,image/*"
         label={buttonLabel}
-        onFile={(u, file) => {
-          if (file.type.startsWith("video")) setCurVideo(u);
-          else setCurPoster(u);
-        }}
+        onFile={handleFile}
+        busy={busy}
+        persistent={!!mediaKey && isAdmin}
       />
     </div>
   );
