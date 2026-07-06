@@ -84,7 +84,7 @@ export function Journey() {
                 idx === safeIndex ? "border-leaf" : "border-white/10 hover:border-white/30"
               }`}
             >
-              <div className="aspect-video bg-black">
+              <div className="aspect-[3/4] bg-black">
                 <EditableMediaSlot
                   title={j.title}
                   videoUrl={j.video_url}
