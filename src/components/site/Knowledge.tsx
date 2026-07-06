@@ -75,7 +75,7 @@ export function Knowledge() {
 
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
 
-              <div className="mt-4 aspect-video overflow-hidden rounded-2xl bg-foreground/90">
+              <div className="mx-auto mt-4 aspect-[3/4] w-full max-w-xs overflow-hidden rounded-2xl bg-foreground/90">
                 <EditableMediaSlot
                   title={s.title}
                   videoUrl={s.video_url}

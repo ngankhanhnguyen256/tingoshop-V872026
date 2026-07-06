@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Settings, X } from "lucide-react";
 import { heroSlides } from "@/data/heroSlides";
+import { isEditMode } from "./EditableMedia";
 
-// Chỉ hiển thị trong môi trường dev preview để bạn dùng Visual Edits
-// click chọn ảnh/video và Upload file cho từng slide.
+// Chỉ hiển thị trong môi trường dev / preview Lovable.
 export function BannerAdmin() {
   const [open, setOpen] = useState(false);
-  if (!import.meta.env.DEV) return null;
+  const [show, setShow] = useState(false);
+  useEffect(() => setShow(isEditMode()), []);
+  if (!show) return null;
 
   return (
     <>

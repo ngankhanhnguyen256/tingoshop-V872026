@@ -8,10 +8,16 @@ import {
 import { Upload } from "lucide-react";
 
 /**
- * Nút "Import Media" hiển thị ở góc phải mỗi vùng media.
- * Luôn hiển thị (không ẩn theo môi trường) để đảm bảo có thể thao tác
- * trong Preview / Production nội bộ.
+ * Nút "Import Media" CHỈ hiển thị trong môi trường phát triển
+ * hoặc trên preview của Lovable. Khi deploy production (Vercel /
+ * tên miền khách hàng) nút bị ẩn hoàn toàn khỏi DOM.
  */
+export function isEditMode(): boolean {
+  if (import.meta.env.DEV) return true;
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return host.includes("lovable") || host === "localhost" || host === "127.0.0.1";
+}
 function ImportButton({
   accept,
   onFile,
@@ -22,6 +28,9 @@ function ImportButton({
   label?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [show, setShow] = useState(false);
+  useEffect(() => setShow(isEditMode()), []);
+  if (!show) return null;
 
   return (
     <>
@@ -62,12 +71,14 @@ const EDITABLE_WRAPPER =
 type EditableImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string;
   wrapperClassName?: string;
+  buttonLabel?: string;
 };
 
 export function EditableImage({
   src,
   wrapperClassName,
   className,
+  buttonLabel,
   ...rest
 }: EditableImageProps) {
   const [current, setCurrent] = useState<string>(src);
@@ -76,7 +87,7 @@ export function EditableImage({
   return (
     <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
       <img {...rest} src={current} className={className} />
-      <ImportButton accept="image/*" onFile={(u) => setCurrent(u)} />
+      <ImportButton accept="image/*" onFile={(u) => setCurrent(u)} label={buttonLabel} />
     </div>
   );
 }
@@ -138,6 +149,7 @@ export function EditableMediaSlot({
   wrapperClassName,
   videoProps,
   imgProps,
+  buttonLabel,
 }: {
   videoUrl?: string;
   posterUrl?: string;
@@ -146,6 +158,7 @@ export function EditableMediaSlot({
   wrapperClassName?: string;
   videoProps?: VideoHTMLAttributes<HTMLVideoElement>;
   imgProps?: ImgHTMLAttributes<HTMLImageElement>;
+  buttonLabel?: string;
 }) {
   const [curVideo, setCurVideo] = useState<string | undefined>(videoUrl);
   const [curPoster, setCurPoster] = useState<string | undefined>(posterUrl);
@@ -179,6 +192,7 @@ export function EditableMediaSlot({
       )}
       <ImportButton
         accept="video/*,image/*"
+        label={buttonLabel}
         onFile={(u, file) => {
           if (file.type.startsWith("video")) setCurVideo(u);
           else setCurPoster(u);
