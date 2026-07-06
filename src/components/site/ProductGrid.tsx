@@ -8,7 +8,6 @@ import yensao from "@/assets/product-yensao.jpg";
 import tra from "@/assets/product-tra.jpg";
 import sam from "@/assets/product-sam.jpg";
 import { useCart } from "@/hooks/useCart";
-import { EditableImage } from "./EditableMedia";
 
 type Product = { id: string; img: string; name: string; tag: string; price: string };
 
@@ -45,7 +44,7 @@ export function ProductGrid() {
               className="group relative overflow-hidden rounded-3xl border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-soft"
             >
               <div className="relative aspect-square overflow-hidden bg-gradient-leaf">
-                <EditableImage
+                <img
                   src={p.img}
                   alt={p.name}
                   width={768}
@@ -54,7 +53,6 @@ export function ProductGrid() {
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
-
               <div className="p-4 sm:p-5">
                 <div className="text-[10px] font-semibold uppercase tracking-wider text-ocean sm:text-xs">{p.tag}</div>
                 <h3 className="mt-1 text-sm font-bold sm:text-base">{p.name}</h3>

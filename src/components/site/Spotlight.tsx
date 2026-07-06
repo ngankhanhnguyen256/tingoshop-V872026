@@ -1,7 +1,6 @@
 import { ShoppingCart, Check } from "lucide-react";
 import chocolate from "@/assets/product-chocolate.jpg";
 import { useCart } from "@/hooks/useCart";
-import { EditableImage } from "./EditableMedia";
 
 export function Spotlight() {
   const { addItem } = useCart();
@@ -20,17 +19,15 @@ export function Spotlight() {
         <div className="mt-14 grid items-center gap-10 overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/70 p-8 shadow-soft backdrop-blur lg:grid-cols-2 lg:p-12">
           <div className="relative">
             <div className="absolute inset-0 -m-4 rounded-[2.5rem] bg-gradient-to-br from-ocean/20 to-leaf/20 blur-2xl" />
-            <EditableImage
+            <img
               src={chocolate}
               alt="TINGO Chocolate Meal Replacement"
               width={1024}
               height={1024}
               loading="lazy"
               className="relative rounded-2xl"
-              wrapperClassName="relative inline-block"
             />
           </div>
-
 
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-ocean/10 px-3 py-1 text-xs font-bold text-ocean">
