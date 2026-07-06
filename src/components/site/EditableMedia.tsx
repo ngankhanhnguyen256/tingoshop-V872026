@@ -147,6 +147,7 @@ export function EditableMediaSlot({
   wrapperClassName,
   videoProps,
   imgProps,
+  buttonLabel,
 }: {
   videoUrl?: string;
   posterUrl?: string;
@@ -155,6 +156,7 @@ export function EditableMediaSlot({
   wrapperClassName?: string;
   videoProps?: VideoHTMLAttributes<HTMLVideoElement>;
   imgProps?: ImgHTMLAttributes<HTMLImageElement>;
+  buttonLabel?: string;
 }) {
   const [curVideo, setCurVideo] = useState<string | undefined>(videoUrl);
   const [curPoster, setCurPoster] = useState<string | undefined>(posterUrl);
@@ -188,6 +190,7 @@ export function EditableMediaSlot({
       )}
       <ImportButton
         accept="video/*,image/*"
+        label={buttonLabel}
         onFile={(u, file) => {
           if (file.type.startsWith("video")) setCurVideo(u);
           else setCurPoster(u);
