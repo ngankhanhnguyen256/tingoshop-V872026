@@ -75,14 +75,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "TINGO — Đồ Uống & Dinh Dưỡng Sức Khỏe Tự Nhiên" },
+      { name: "description", content: "TINGO mang đến đồ uống dinh dưỡng sạch từ thiên nhiên: cacao, ngũ cốc, đạm đậu nành, sữa non & nghệ. Cân bằng cơ thể, khơi nguồn năng lượng mỗi ngày." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "TINGO — Đồ Uống & Dinh Dưỡng Sức Khỏe Tự Nhiên" },
+      { property: "og:description", content: "TINGO mang đến đồ uống dinh dưỡng sạch từ thiên nhiên: cacao, ngũ cốc, đạm đậu nành, sữa non & nghệ. Cân bằng cơ thể, khơi nguồn năng lượng mỗi ngày." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "TINGO — Đồ Uống & Dinh Dưỡng Sức Khỏe Tự Nhiên" },
+      { name: "twitter:description", content: "TINGO mang đến đồ uống dinh dưỡng sạch từ thiên nhiên: cacao, ngũ cốc, đạm đậu nành, sữa non & nghệ. Cân bằng cơ thể, khơi nguồn năng lượng mỗi ngày." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bf2a112a-260c-4924-a9f6-4495a365b5bd/id-preview-a116b5e9--fb8ac94f-5e0e-4863-ac50-24d864c00a4c.lovable.app-1783350665663.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bf2a112a-260c-4924-a9f6-4495a365b5bd/id-preview-a116b5e9--fb8ac94f-5e0e-4863-ac50-24d864c00a4c.lovable.app-1783350665663.png" },
     ],
     links: [
       {
