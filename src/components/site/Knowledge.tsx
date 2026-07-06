@@ -66,6 +66,7 @@ export function Knowledge() {
 
               <div className="mt-4 aspect-video overflow-hidden rounded-2xl bg-gradient-leaf">
                 <EditableImage
+                  mediaKey={`knowledge.${s.id}.image`}
                   src={s.image_url}
                   alt={s.title}
                   loading="lazy"
@@ -77,6 +78,7 @@ export function Knowledge() {
 
               <div className="mx-auto mt-4 aspect-[3/4] w-full max-w-xs overflow-hidden rounded-2xl bg-foreground/90">
                 <EditableMediaSlot
+                  mediaKey={`knowledge.${s.id}.video`}
                   title={s.title}
                   videoUrl={s.video_url}
                   posterUrl={s.image_url}

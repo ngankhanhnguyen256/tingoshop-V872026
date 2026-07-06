@@ -46,6 +46,7 @@ export function ProductGrid() {
             >
               <div className="relative aspect-square overflow-hidden bg-gradient-leaf">
                 <EditableImage
+                  mediaKey={`product.${p.id}`}
                   src={p.img}
                   alt={p.name}
                   width={768}

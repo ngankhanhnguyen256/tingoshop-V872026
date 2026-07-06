@@ -24,6 +24,7 @@ export function HeroCarousel() {
             aria-hidden={i !== idx}
           >
             <EditableMediaSlot
+              mediaKey={`hero.${s.id}`}
               title={s.title}
               videoUrl={s.type === "video" ? s.video_url : ""}
               posterUrl={s.image_url}
