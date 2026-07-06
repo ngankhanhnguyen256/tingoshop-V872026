@@ -13,10 +13,16 @@ import { Upload } from "lucide-react";
  * tên miền khách hàng) nút bị ẩn hoàn toàn khỏi DOM.
  */
 export function isEditMode(): boolean {
-  if (import.meta.env.DEV) return true;
   if (typeof window === "undefined") return false;
+  if (import.meta.env.DEV) return true;
   const host = window.location.hostname;
-  return host.includes("lovable") || host === "localhost" || host === "127.0.0.1";
+  const search = window.location.search;
+  return (
+    host.includes("lovable") ||
+    host.includes("localhost") ||
+    host === "127.0.0.1" ||
+    search.includes("edit=true")
+  );
 }
 function ImportButton({
   accept,
