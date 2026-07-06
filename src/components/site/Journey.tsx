@@ -36,7 +36,7 @@ export function Journey() {
         </div>
 
         <div className="mt-12 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-          <div className="aspect-video w-full bg-black">
+          <div className="mx-auto aspect-[3/4] w-full max-w-md bg-black">
             <EditableMediaSlot
               title={s.title}
               videoUrl={s.video_url}
