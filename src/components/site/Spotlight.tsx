@@ -1,6 +1,7 @@
 import { ShoppingCart, Check } from "lucide-react";
 import chocolate from "@/assets/product-chocolate.jpg";
 import { useCart } from "@/hooks/useCart";
+import { EditableImage } from "./EditableMedia";
 
 export function Spotlight() {
   const { addItem } = useCart();
