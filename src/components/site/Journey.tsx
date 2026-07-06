@@ -1,20 +1,19 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { journeySlides } from "@/data/journeySlides";
-
-function isYouTube(url: string) {
-  return /youtube\.com|youtu\.be/.test(url);
-}
-function toEmbed(url: string) {
-  const m = url.match(/(?:youtu\.be\/|v=)([\w-]{6,})/);
-  return m ? `https://www.youtube.com/embed/${m[1]}` : url;
-}
+import { EditableMediaSlot } from "./EditableMedia";
 
 export function Journey() {
   // Chỉ hiển thị slide có ảnh hoặc video hợp lệ; tối đa 5 slide
-  const slides = journeySlides
-    .filter((j) => (j.poster_url && j.poster_url.trim() !== "") || (j.video_url && j.video_url.trim() !== ""))
-    .slice(0, 5);
+  const [slides] = useState(
+    journeySlides
+      .filter(
+        (j) =>
+          (j.poster_url && j.poster_url.trim() !== "") ||
+          (j.video_url && j.video_url.trim() !== ""),
+      )
+      .slice(0, 5),
+  );
 
   const [i, setI] = useState(0);
 
@@ -38,27 +37,14 @@ export function Journey() {
 
         <div className="mt-12 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
           <div className="aspect-video w-full bg-black">
-            {s.video_url ? (
-              isYouTube(s.video_url) ? (
-                <iframe
-                  src={toEmbed(s.video_url)}
-                  title={s.title}
-                  className="h-full w-full"
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <video
-                  src={s.video_url}
-                  poster={s.poster_url || undefined}
-                  controls
-                  playsInline
-                  className="h-full w-full object-cover"
-                />
-              )
-            ) : (
-              <img src={s.poster_url} alt={s.title} loading="lazy" className="h-full w-full object-cover" />
-            )}
+            <EditableMediaSlot
+              title={s.title}
+              videoUrl={s.video_url}
+              posterUrl={s.poster_url}
+              className="h-full w-full object-cover"
+              videoProps={{ controls: true, playsInline: true }}
+              imgProps={{ loading: "lazy", alt: s.title }}
+            />
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4 p-6">
@@ -74,7 +60,9 @@ export function Journey() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-xs text-background/70">{safeIndex + 1} / {slides.length}</span>
+              <span className="text-xs text-background/70">
+                {safeIndex + 1} / {slides.length}
+              </span>
               <button
                 onClick={() => setI((p) => (p + 1) % slides.length)}
                 aria-label="Slide kế"
@@ -86,20 +74,25 @@ export function Journey() {
           </div>
         </div>
 
-        {/* Thumbnails — Visual Edits click từng ảnh để Upload file hoặc dán URL */}
+        {/* Thumbnails — mỗi ô có nút Import Media riêng */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {slides.map((j, idx) => (
             <button
               key={j.id}
               onClick={() => setI(idx)}
-              className={`overflow-hidden rounded-2xl border text-left transition-all ${idx === safeIndex ? "border-leaf" : "border-white/10 hover:border-white/30"}`}
+              className={`overflow-hidden rounded-2xl border text-left transition-all ${
+                idx === safeIndex ? "border-leaf" : "border-white/10 hover:border-white/30"
+              }`}
             >
               <div className="aspect-video bg-black">
-                {j.video_url && !isYouTube(j.video_url) ? (
-                  <video src={j.video_url} poster={j.poster_url || undefined} muted className="h-full w-full object-cover" />
-                ) : (
-                  <img src={j.poster_url} alt={j.title} loading="lazy" className="h-full w-full object-cover" />
-                )}
+                <EditableMediaSlot
+                  title={j.title}
+                  videoUrl={j.video_url}
+                  posterUrl={j.poster_url}
+                  className="h-full w-full object-cover"
+                  videoProps={{ muted: true, playsInline: true }}
+                  imgProps={{ loading: "lazy", alt: j.title }}
+                />
               </div>
               <div className="p-3">
                 <div className="text-sm font-semibold">{j.title}</div>
