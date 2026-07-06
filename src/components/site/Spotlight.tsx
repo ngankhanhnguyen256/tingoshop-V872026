@@ -21,6 +21,7 @@ export function Spotlight() {
           <div className="relative">
             <div className="absolute inset-0 -m-4 rounded-[2.5rem] bg-gradient-to-br from-ocean/20 to-leaf/20 blur-2xl" />
             <EditableImage
+              mediaKey="spotlight.main"
               src={chocolate}
               alt="TINGO Chocolate Meal Replacement"
               width={1024}

@@ -38,6 +38,7 @@ export function Journey() {
         <div className="mt-12 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
           <div className="mx-auto aspect-[3/4] w-full max-w-md bg-black">
             <EditableMediaSlot
+              mediaKey={`journey.${s.id}`}
               title={s.title}
               videoUrl={s.video_url}
               posterUrl={s.poster_url}
@@ -86,6 +87,7 @@ export function Journey() {
             >
               <div className="aspect-[3/4] bg-black">
                 <EditableMediaSlot
+                  mediaKey={`journey.${j.id}`}
                   title={j.title}
                   videoUrl={j.video_url}
                   posterUrl={j.poster_url}
