@@ -69,12 +69,14 @@ const EDITABLE_WRAPPER =
 type EditableImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string;
   wrapperClassName?: string;
+  buttonLabel?: string;
 };
 
 export function EditableImage({
   src,
   wrapperClassName,
   className,
+  buttonLabel,
   ...rest
 }: EditableImageProps) {
   const [current, setCurrent] = useState<string>(src);
