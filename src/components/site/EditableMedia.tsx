@@ -28,7 +28,9 @@ function ImportButton({
   label?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  if (!isEditMode()) return null;
+  const [show, setShow] = useState(false);
+  useEffect(() => setShow(isEditMode()), []);
+  if (!show) return null;
 
   return (
     <>
