@@ -14,15 +14,19 @@ import { Upload } from "lucide-react";
  */
 export function isEditMode(): boolean {
   if (typeof window === "undefined") return false;
-  if (import.meta.env.DEV) return true;
   const host = window.location.hostname;
   const search = window.location.search;
-  return (
-    host.includes("lovable") ||
-    host.includes("localhost") ||
-    host === "127.0.0.1" ||
-    search.includes("edit=true")
-  );
+  // Cho phép bật thủ công bằng ?edit=true trên mọi domain
+  if (search.includes("edit=true")) return true;
+  // Localhost dev
+  if (host === "localhost" || host === "127.0.0.1") return true;
+  if (import.meta.env.DEV) return true;
+  // CHỈ hiện trên preview của Lovable (id-preview--*.lovable.app hoặc *-dev.lovable.app),
+  // KHÔNG hiện trên domain published (vd: tingoshop.lovable.app) hay Vercel / tên miền khách.
+  if (host.startsWith("id-preview--")) return true;
+  if (host.endsWith("-dev.lovable.app")) return true;
+  if (host.endsWith(".lovable.dev")) return true;
+  return false;
 }
 function ImportButton({
   accept,
