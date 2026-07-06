@@ -83,7 +83,7 @@ export function EditableImage({
   return (
     <div className={wrapperClassName ?? EDITABLE_WRAPPER}>
       <img {...rest} src={current} className={className} />
-      <ImportButton accept="image/*" onFile={(u) => setCurrent(u)} />
+      <ImportButton accept="image/*" onFile={(u) => setCurrent(u)} label={buttonLabel} />
     </div>
   );
 }
