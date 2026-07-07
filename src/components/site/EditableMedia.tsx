@@ -162,13 +162,14 @@ export function EditableVideo({
     if (file.type.startsWith("video")) setOverride((p) => ({ ...p, src: blobUrl }));
     else setOverride((p) => ({ ...p, poster: blobUrl }));
 
-    if (mediaKey && isAdmin) {
+    if (mediaKey) {
       setBusy(true);
       try {
         await save(mediaKey, file);
         setOverride({});
       } catch (e) {
         console.error("[EditableVideo] save failed", e);
+        alert(`Không lưu được vĩnh viễn: ${(e as Error).message}\n\nVào /admin đăng nhập admin rồi thử lại.`);
       } finally {
         setBusy(false);
       }
