@@ -127,6 +127,7 @@ function RootComponent() {
           <CartProvider>
             <Outlet />
             <GlobalAuthModal />
+            <AdminStatusBadge />
           </CartProvider>
         </MediaConfigProvider>
       </AuthProvider>
