@@ -13,6 +13,7 @@ import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { LoginModal } from "@/components/site/LoginModal";
 import { MediaConfigProvider } from "@/hooks/useMediaConfig";
+import { AdminStatusBadge } from "@/components/site/EditableMedia";
 
 function NotFoundComponent() {
   return (
