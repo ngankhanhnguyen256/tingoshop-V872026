@@ -105,13 +105,14 @@ export function EditableImage({
 
   const handleFile = async (blobUrl: string, file: File) => {
     setOverride(blobUrl);
-    if (mediaKey && isAdmin) {
+    if (mediaKey) {
       setBusy(true);
       try {
-        const res = await save(mediaKey, file);
-        if (res) setOverride(null); // dùng URL vĩnh viễn từ provider
+        await save(mediaKey, file);
+        setOverride(null);
       } catch (e) {
         console.error("[EditableImage] save failed", e);
+        alert(`Không lưu được vĩnh viễn: ${(e as Error).message}\n\nẢnh chỉ hiển thị tạm. Vào /admin đăng nhập tài khoản admin rồi thử lại.`);
       } finally {
         setBusy(false);
       }
