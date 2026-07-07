@@ -5,7 +5,7 @@ import {
   type ImgHTMLAttributes,
   type VideoHTMLAttributes,
 } from "react";
-import { Upload, Loader2, Cloud } from "lucide-react";
+import { Upload, Loader2, Cloud, ShieldCheck, ShieldAlert } from "lucide-react";
 import { useMediaConfig } from "@/hooks/useMediaConfig";
 
 /**
@@ -23,8 +23,29 @@ export function isEditMode(): boolean {
   if (host.startsWith("id-preview--")) return true;
   if (host.endsWith("-dev.lovable.app")) return true;
   if (host.endsWith(".lovable.dev")) return true;
+  if (host.endsWith(".lovableproject.com")) return true;
   return false;
 }
+
+export function AdminStatusBadge() {
+  const { isAdmin, userEmail } = useMediaConfig();
+  const [show, setShow] = useState(false);
+  useEffect(() => setShow(isEditMode()), []);
+  if (!show) return null;
+
+  const cloud = isAdmin;
+  return (
+    <a
+      href="/admin"
+      className={`fixed bottom-4 right-4 z-[60] inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold text-white shadow-lg ${cloud ? "bg-emerald-600 hover:bg-emerald-700" : "bg-amber-600 hover:bg-amber-700"}`}
+      title={cloud ? "Đã đăng nhập admin — Import lưu vĩnh viễn vào Cloud" : "Chưa đăng nhập admin — Import chỉ hiển thị tạm. Bấm để mở /admin"}
+    >
+      {cloud ? <ShieldCheck className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
+      {cloud ? `Admin: ${userEmail ?? "ok"}` : userEmail ? `Chưa phải admin (${userEmail})` : "Chưa đăng nhập admin"}
+    </a>
+  );
+}
+
 
 function ImportButton({
   accept,
@@ -105,13 +126,14 @@ export function EditableImage({
 
   const handleFile = async (blobUrl: string, file: File) => {
     setOverride(blobUrl);
-    if (mediaKey && isAdmin) {
+    if (mediaKey) {
       setBusy(true);
       try {
-        const res = await save(mediaKey, file);
-        if (res) setOverride(null); // dùng URL vĩnh viễn từ provider
+        await save(mediaKey, file);
+        setOverride(null);
       } catch (e) {
         console.error("[EditableImage] save failed", e);
+        alert(`Không lưu được vĩnh viễn: ${(e as Error).message}\n\nẢnh chỉ hiển thị tạm. Vào /admin đăng nhập tài khoản admin rồi thử lại.`);
       } finally {
         setBusy(false);
       }
@@ -161,13 +183,14 @@ export function EditableVideo({
     if (file.type.startsWith("video")) setOverride((p) => ({ ...p, src: blobUrl }));
     else setOverride((p) => ({ ...p, poster: blobUrl }));
 
-    if (mediaKey && isAdmin) {
+    if (mediaKey) {
       setBusy(true);
       try {
         await save(mediaKey, file);
         setOverride({});
       } catch (e) {
         console.error("[EditableVideo] save failed", e);
+        alert(`Không lưu được vĩnh viễn: ${(e as Error).message}\n\nVào /admin đăng nhập admin rồi thử lại.`);
       } finally {
         setBusy(false);
       }
@@ -237,13 +260,14 @@ export function EditableMediaSlot({
     if (file.type.startsWith("video")) setOverride((p) => ({ ...p, video: blobUrl }));
     else setOverride((p) => ({ ...p, poster: blobUrl }));
 
-    if (mediaKey && isAdmin) {
+    if (mediaKey) {
       setBusy(true);
       try {
         await save(mediaKey, file);
         setOverride({});
       } catch (e) {
         console.error("[EditableMediaSlot] save failed", e);
+        alert(`Không lưu được vĩnh viễn: ${(e as Error).message}\n\nVào /admin đăng nhập admin rồi thử lại.`);
       } finally {
         setBusy(false);
       }

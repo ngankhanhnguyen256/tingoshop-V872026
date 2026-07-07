@@ -15,26 +15,28 @@ type MediaMap = Record<string, MediaEntry>;
 type Ctx = {
   ready: boolean;
   isAdmin: boolean;
+  userEmail: string | null;
   resolve: (key: string | undefined, fallback: string) => string;
   resolveType: (key: string | undefined, fallback: "image" | "video") => "image" | "video";
-  save: (key: string, file: File) => Promise<{ url: string; media_type: string } | null>;
+  save: (key: string, file: File) => Promise<{ url: string; media_type: string }>;
   refresh: () => Promise<void>;
 };
 
 const MediaCtx = createContext<Ctx | null>(null);
 
-// URL ký (signed URL) 10 năm — đủ vĩnh viễn cho landing page.
 const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 
 export function MediaConfigProvider({ children }: { children: ReactNode }) {
   const [map, setMap] = useState<MediaMap>({});
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("media_config")
       .select("key,url,media_type");
+    if (error) console.error("[MediaConfig] load error", error);
     const next: MediaMap = {};
     (data ?? []).forEach((row) => {
       next[row.key] = { url: row.url, media_type: row.media_type };
@@ -45,13 +47,19 @@ export function MediaConfigProvider({ children }: { children: ReactNode }) {
 
   const checkAdmin = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setIsAdmin(false); return; }
-    const { data } = await supabase
+    if (!user) {
+      setIsAdmin(false);
+      setUserEmail(null);
+      return;
+    }
+    setUserEmail(user.email ?? null);
+    const { data, error } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin")
       .maybeSingle();
+    if (error) console.error("[MediaConfig] role check error", error);
     setIsAdmin(!!data);
   }, []);
 
@@ -59,7 +67,7 @@ export function MediaConfigProvider({ children }: { children: ReactNode }) {
     load();
     checkAdmin();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
         checkAdmin();
       }
     });
@@ -78,7 +86,11 @@ export function MediaConfigProvider({ children }: { children: ReactNode }) {
 
   const save = useCallback(
     async (key: string, file: File) => {
-      if (!key) return null;
+      if (!key) throw new Error("Thiếu mediaKey");
+      // Verify session at call time (không phụ thuộc vào state race)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Chưa đăng nhập. Mở /admin để đăng nhập trước.");
+
       const safeKey = key.replace(/[^a-z0-9_.-]/gi, "_");
       const ext = file.name.split(".").pop() || "bin";
       const path = `${safeKey}/${Date.now()}.${ext}`;
@@ -86,20 +98,20 @@ export function MediaConfigProvider({ children }: { children: ReactNode }) {
       const { error: upErr } = await supabase.storage
         .from("media")
         .upload(path, file, { cacheControl: "31536000", upsert: false, contentType: file.type });
-      if (upErr) throw upErr;
+      if (upErr) throw new Error(`Upload lỗi: ${upErr.message}`);
 
       const { data: signed, error: signErr } = await supabase.storage
         .from("media")
         .createSignedUrl(path, TEN_YEARS);
-      if (signErr || !signed) throw signErr ?? new Error("Cannot sign URL");
+      if (signErr || !signed) throw new Error(`Sign URL lỗi: ${signErr?.message ?? "unknown"}`);
 
       const media_type = file.type.startsWith("video") ? "video" : "image";
       const url = signed.signedUrl;
 
       const { error: dbErr } = await supabase
         .from("media_config")
-        .upsert({ key, url, media_type }, { onConflict: "key" });
-      if (dbErr) throw dbErr;
+        .upsert({ key, url, media_type, updated_by: user.id }, { onConflict: "key" });
+      if (dbErr) throw new Error(`Ghi DB lỗi: ${dbErr.message} (cần quyền admin)`);
 
       setMap((prev) => ({ ...prev, [key]: { url, media_type } }));
       return { url, media_type };
@@ -108,8 +120,8 @@ export function MediaConfigProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<Ctx>(
-    () => ({ ready, isAdmin, resolve, resolveType, save, refresh: load }),
-    [ready, isAdmin, resolve, resolveType, save, load],
+    () => ({ ready, isAdmin, userEmail, resolve, resolveType, save, refresh: load }),
+    [ready, isAdmin, userEmail, resolve, resolveType, save, load],
   );
 
   return <MediaCtx.Provider value={value}>{children}</MediaCtx.Provider>;
