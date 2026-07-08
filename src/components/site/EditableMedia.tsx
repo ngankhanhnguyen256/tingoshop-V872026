@@ -24,6 +24,9 @@ export function isEditMode(): boolean {
   if (host.endsWith("-dev.lovable.app")) return true;
   if (host.endsWith(".lovable.dev")) return true;
   if (host.endsWith(".lovableproject.com")) return true;
+  if (host.endsWith(".bolt.new")) return true;
+  if (host.endsWith(".bolt.dev")) return true;
+  if (host.endsWith(".lovable.app")) return true;
   return false;
 }
 
