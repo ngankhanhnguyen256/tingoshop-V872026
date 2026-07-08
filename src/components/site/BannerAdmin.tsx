@@ -39,7 +39,7 @@ export function BannerAdmin() {
                     <span className="font-semibold">Slide {idx + 1} — {s.type === "video" ? "Video" : "Ảnh"}</span>
                     <span className="text-muted-foreground">{s.id}</span>
                   </div>
-                  <div className="aspect-video overflow-hidden rounded-lg bg-secondary">
+                  <div className="aspect-[4/3] overflow-hidden rounded-lg bg-secondary">
                     {s.type === "video" && s.video_url ? (
                       <video src={s.video_url} poster={s.image_url} muted loop playsInline className="h-full w-full object-cover" />
                     ) : (
